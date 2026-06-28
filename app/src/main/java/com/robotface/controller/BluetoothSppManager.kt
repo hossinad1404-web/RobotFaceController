@@ -46,20 +46,32 @@ class BluetoothSppManager(
         disconnect()
         Thread {
             try {
-                val s = device.createRfcommSocketToServiceRecord(SPP_UUID)
-                s.connect()
+                var s: BluetoothSocket
+                try {
+                    s = device.createRfcommSocketToServiceRecord(SPP_UUID)
+                    s.connect()
+                } catch (e: IOException) {
+                    Log.e(TAG, "Standard connect failed, trying fallback channel method", e)
+                    // Fallback for HC-05 clones with broken/missing SDP records:
+                    // open RFCOMM channel 1 directly via reflection.
+                    @Suppress("UNCHECKED_CAST")
+                    val method = device.javaClass.getMethod(
+                        "createRfcommSocket",
+                        Int::class.javaPrimitiveType
+                    )
+                    s = method.invoke(device, 1) as BluetoothSocket
+                    s.connect()
+                }
                 socket = s
                 inputStream = s.inputStream
                 outputStream = s.outputStream
                 running = true
                 onConnected()
                 startReadLoop()
-            } catch (e: IOException) {
+            } catch (e: Exception) {
                 Log.e(TAG, "Connect failed", e)
                 onDisconnected(e.message)
                 closeQuietly()
-            } catch (e: SecurityException) {
-                onDisconnected("Permission error: ${e.message}")
             }
         }.start()
     }
