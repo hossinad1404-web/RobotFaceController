@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun connectTo(device: BluetoothDevice) {
         tvConnection.text = "در حال اتصال..."
-        bt.connect(device)
+        bt.connect(device, bluetoothAdapter)
     }
 
     private fun hasPermissions(): Boolean {
