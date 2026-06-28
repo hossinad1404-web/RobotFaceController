@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Connection row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tvConnection"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="وصل نیست"
+                android:textColor="@color/text_light"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnConnect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="اتصال" />
+        </LinearLayout>
+
+        <!-- Robot current state -->
+        <TextView
+            android:id="@+id/tvState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card_dark"
+            android:padding="12dp"
+            android:textColor="@color/accent"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:text="حالت فعلی: ---"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Mode buttons grid -->
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="3"
+            android:layout_marginBottom="12dp">
+
+            <Button android:id="@+id/btnNormal" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="عادی" />
+            <Button android:id="@+id/btnHappy" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="خوشحال" />
+            <Button android:id="@+id/btnSad" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="ناراحت" />
+
+            <Button android:id="@+id/btnAngry" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="عصبانی" />
+            <Button android:id="@+id/btnGuard" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="نگهبان" />
+            <Button android:id="@+id/btnRescue" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="نجات" />
+
+            <Button android:id="@+id/btnDanger" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="خطر" android:backgroundTint="@color/danger" />
+            <Button android:id="@+id/btnClearAlarm" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="پاک کردن آلارم" />
+            <Button android:id="@+id/btnLowBat" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="باتری کم" />
+
+            <Button android:id="@+id/btnStuck" android:layout_columnWeight="1" android:layout_width="0dp" android:layout_margin="2dp" android:text="گیر کردن موتور" />
+        </GridLayout>
+
+        <!-- Chat -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <EditText
+                android:id="@+id/etChat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="پیام برای نمایش روی صورت ربات"
+                android:textColor="@color/text_light"
+                android:textColorHint="#888888" />
+
+            <Button
+                android:id="@+id/btnSendChat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ارسال" />
+        </LinearLayout>
+
+        <!-- Radar -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="رادار (فقط در حالت نگهبان / نجات فعال است)"
+            android:textColor="@color/text_light"
+            android:layout_marginBottom="6dp" />
+
+        <com.robotface.controller.RadarView
+            android:id="@+id/radarView"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Auto avoid -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <CheckBox
+                android:id="@+id/cbAutoAvoid"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/text_light"
+                android:text="ارسال خودکار «خطر» اگر مانع نزدیک بود" />
+
+            <EditText
+                android:id="@+id/etThreshold"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:text="15"
+                android:textColor="@color/text_light"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" cm"
+                android:textColor="@color/text_light" />
+        </LinearLayout>
+
+        <!-- Log -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="رویدادها:"
+            android:textColor="@color/text_light"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:id="@+id/tvLog"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="@color/card_dark"
+            android:textColor="@color/text_light"
+            android:padding="8dp"
+            android:scrollbars="vertical"
+            android:text="" />
+
+    </LinearLayout>
+</ScrollView>
