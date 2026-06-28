@@ -42,26 +42,46 @@ class BluetoothSppManager(
         }
     }
 
-    fun connect(device: BluetoothDevice) {
+    fun connect(device: BluetoothDevice, adapter: BluetoothAdapter? = null) {
         disconnect()
         Thread {
             try {
-                var s: BluetoothSocket
-                try {
-                    s = device.createRfcommSocketToServiceRecord(SPP_UUID)
-                    s.connect()
-                } catch (e: IOException) {
-                    Log.e(TAG, "Standard connect failed, trying fallback channel method", e)
-                    // Fallback for HC-05 clones with broken/missing SDP records:
-                    // open RFCOMM channel 1 directly via reflection.
-                    @Suppress("UNCHECKED_CAST")
-                    val method = device.javaClass.getMethod(
-                        "createRfcommSocket",
-                        Int::class.javaPrimitiveType
-                    )
-                    s = method.invoke(device, 1) as BluetoothSocket
-                    s.connect()
+                // Many Bluetooth stacks (especially on older Android versions)
+                // fail or hang an RFCOMM connect attempt if discovery is active.
+                try { adapter?.cancelDiscovery() } catch (e: SecurityException) { }
+
+                var s: BluetoothSocket? = null
+                val attempts: List<() -> BluetoothSocket> = listOf(
+                    { device.createRfcommSocketToServiceRecord(SPP_UUID) },
+                    { device.createInsecureRfcommSocketToServiceRecord(SPP_UUID) },
+                    {
+                        @Suppress("UNCHECKED_CAST")
+                        val method = device.javaClass.getMethod(
+                            "createRfcommSocket",
+                            Int::class.javaPrimitiveType
+                        )
+                        method.invoke(device, 1) as BluetoothSocket
+                    }
+                )
+
+                var lastError: Exception? = null
+                for (attempt in attempts) {
+                    try {
+                        val candidate = attempt()
+                        candidate.connect()
+                        s = candidate
+                        break
+                    } catch (e: Exception) {
+                        lastError = e
+                        Log.e(TAG, "Connect attempt failed, trying next method", e)
+                        try { (e as? IOException)?.let { } } catch (ignored: Exception) { }
+                    }
                 }
+
+                if (s == null) {
+                    throw lastError ?: IOException("All connection attempts failed")
+                }
+
                 socket = s
                 inputStream = s.inputStream
                 outputStream = s.outputStream
