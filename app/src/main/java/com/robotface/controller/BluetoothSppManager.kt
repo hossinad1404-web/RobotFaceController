@@ -50,46 +50,49 @@ class BluetoothSppManager(
                 // fail or hang an RFCOMM connect attempt if discovery is active.
                 try { adapter?.cancelDiscovery() } catch (e: SecurityException) { }
 
-                var s: BluetoothSocket? = null
-                val attempts: List<() -> BluetoothSocket> = listOf(
-                    { device.createInsecureRfcommSocketToServiceRecord(SPP_UUID) },
-                    { device.createRfcommSocketToServiceRecord(SPP_UUID) },
-                    {
+                val attempts: List<Pair<String, () -> BluetoothSocket>> = listOf(
+                    "direct-channel-1" to {
                         @Suppress("UNCHECKED_CAST")
                         val method = device.javaClass.getMethod(
                             "createRfcommSocket",
                             Int::class.javaPrimitiveType
                         )
                         method.invoke(device, 1) as BluetoothSocket
-                    }
+                    },
+                    "insecure-uuid" to { device.createInsecureRfcommSocketToServiceRecord(SPP_UUID) },
+                    "secure-uuid" to { device.createRfcommSocketToServiceRecord(SPP_UUID) }
                 )
 
+                var connected: BluetoothSocket? = null
                 var lastError: Exception? = null
-                for (attempt in attempts) {
+
+                for ((name, factory) in attempts) {
+                    var candidate: BluetoothSocket? = null
                     try {
-                        val candidate = attempt()
+                        candidate = factory()
                         candidate.connect()
-                        // Many Bluetooth stacks (and HC-05 clones especially) need
-                        // a brief moment to fully settle the RFCOMM channel before
-                        // the first read/write, otherwise you get an immediate
-                        // "read failed, socket might closed" error.
-                        Thread.sleep(500)
-                        s = candidate
+                        // Give the stack a moment to settle, then verify the
+                        // channel is actually still alive (this is where HC-05
+                        // clones often die silently right after connect()).
+                        Thread.sleep(400)
+                        candidate.inputStream.available()
+                        connected = candidate
+                        Log.i(TAG, "Connected using method: $name")
                         break
                     } catch (e: Exception) {
                         lastError = e
-                        Log.e(TAG, "Connect attempt failed, trying next method", e)
-                        try { (e as? IOException)?.let { } } catch (ignored: Exception) { }
+                        Log.e(TAG, "Method '$name' failed", e)
+                        try { candidate?.close() } catch (ignored: IOException) { }
                     }
                 }
 
-                if (s == null) {
+                if (connected == null) {
                     throw lastError ?: IOException("All connection attempts failed")
                 }
 
-                socket = s
-                inputStream = s.inputStream
-                outputStream = s.outputStream
+                socket = connected
+                inputStream = connected.inputStream
+                outputStream = connected.outputStream
                 running = true
                 onConnected()
                 startReadLoop()
