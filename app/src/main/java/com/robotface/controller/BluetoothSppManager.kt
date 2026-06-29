@@ -52,8 +52,8 @@ class BluetoothSppManager(
 
                 var s: BluetoothSocket? = null
                 val attempts: List<() -> BluetoothSocket> = listOf(
-                    { device.createRfcommSocketToServiceRecord(SPP_UUID) },
                     { device.createInsecureRfcommSocketToServiceRecord(SPP_UUID) },
+                    { device.createRfcommSocketToServiceRecord(SPP_UUID) },
                     {
                         @Suppress("UNCHECKED_CAST")
                         val method = device.javaClass.getMethod(
@@ -69,6 +69,11 @@ class BluetoothSppManager(
                     try {
                         val candidate = attempt()
                         candidate.connect()
+                        // Many Bluetooth stacks (and HC-05 clones especially) need
+                        // a brief moment to fully settle the RFCOMM channel before
+                        // the first read/write, otherwise you get an immediate
+                        // "read failed, socket might closed" error.
+                        Thread.sleep(500)
                         s = candidate
                         break
                     } catch (e: Exception) {
